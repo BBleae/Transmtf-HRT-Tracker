@@ -38,19 +38,19 @@ const TRANSLATIONS = {
         "timeline.dose_label": "剂量",
         "timeline.bio_label": "生物 E2",
         "drawer.title": "剂量管理工具",
-        "drawer.desc": "导出、备份、清空或导入剂量记录。",
+        "drawer.desc": "管理剂量数据。",
         "drawer.clear": "清空所有剂量",
-        "drawer.clear_confirm": "确定要删除所有剂量记录吗？此操作无法撤销。",
+        "drawer.clear_confirm": "删除所有记录？不可撤销。",
         "drawer.save": "保存剂量 JSON",
-        "drawer.save_hint": "下载当前剂量记录的 JSON 备份。",
+        "drawer.save_hint": "下载 JSON 备份。",
         "drawer.import": "导入剂量 JSON",
-        "drawer.import_hint": "从 JSON 文件导入剂量记录并覆盖当前数据。",
+        "drawer.import_hint": "导入 JSON 并覆盖。",
         "drawer.empty_export": "当前没有可保存的剂量记录。",
         "drawer.import_error": "导入失败，请确认文件内容有效。",
         "drawer.import_success": "导入成功，已更新剂量记录。",
         "drawer.close": "关闭侧栏",
         "drawer.qr": "二维码导入导出",
-        "drawer.qr_hint": "通过二维码快速分享或恢复剂量记录。",
+        "drawer.qr_hint": "二维码分享或恢复。",
         "import.title": "导入数据",
         "import.text": "粘贴 JSON 文本",
         "import.paste_hint": "在此处粘贴 JSON 内容...",
@@ -72,16 +72,16 @@ const TRANSLATIONS = {
         "qr.error.camera": "无法访问摄像头。",
         "qr.error.decode": "未检测到有效二维码。",
         "qr.error.format": "二维码内容无效。",
-        "qr.help": "二维码中包含剂量 JSON，请谨慎分享。",
+        "qr.help": "含个人数据，谨慎分享。",
         "error.nonPositive": "不能输入小于等于0的值",
         
         "btn.add": "新增给药",
-        "btn.save": "保存记录",
+        "btn.save": "保存",
         "btn.cancel": "取消",
         "btn.edit": "编辑",
 
         "modal.weight.title": "设置体重",
-        "modal.weight.desc": "体重用于计算分布容积 (Vd ≈ 2.0 L/kg)，直接影响血药浓度的峰值估算。",
+        "modal.weight.desc": "用于估算浓度峰值。",
         "modal.dose.add_title": "新增用药",
         "modal.dose.edit_title": "编辑用药",
 
@@ -96,7 +96,7 @@ const TRANSLATIONS = {
         "field.sl_duration": "含服时长",
         "field.sl_custom": "自定义 θ",
         
-        "sl.instructions": "按照建议的含服时间尽量少吞咽口水，并且在药物完全溶解后也继续含着溶解药物的唾液直至达到自己的目标时间。",
+        "sl.instructions": "少吞咽，含住药液直至目标时间。",
         "sl.mode.quick": "快速 (2m)",
         "sl.mode.casual": "随意 (5m)",
         "sl.mode.standard": "标准 (10m)",
@@ -132,19 +132,19 @@ const TRANSLATIONS = {
         "timeline.dose_label": "Dose",
         "timeline.bio_label": "Bio E2",
         "drawer.title": "Dose Utilities",
-        "drawer.desc": "Export, backup, clear, or import your dosage history.",
+        "drawer.desc": "Manage dosage history.",
         "drawer.clear": "Clear All Dosages",
-        "drawer.clear_confirm": "Clear every dosage entry? This cannot be undone.",
+        "drawer.clear_confirm": "Clear all? Irreversible.",
         "drawer.save": "Save Dosages (JSON)",
-        "drawer.save_hint": "Download a JSON backup of the current list.",
+        "drawer.save_hint": "Download JSON backup.",
         "drawer.import": "Import Dosages (JSON)",
-        "drawer.import_hint": "Load dosages from a JSON file and replace the current list.",
+        "drawer.import_hint": "Import JSON & overwrite.",
         "drawer.empty_export": "There are no dosages to export yet.",
         "drawer.import_error": "Import failed. Please check that the file is valid.",
         "drawer.import_success": "Imported dosages successfully.",
         "drawer.close": "Close Panel",
         "drawer.qr": "QR Import/Export",
-        "drawer.qr_hint": "Share or restore your dosages via QR code.",
+        "drawer.qr_hint": "Share or restore via QR.",
         "import.title": "Import Data",
         "import.text": "Paste JSON Text",
         "import.paste_hint": "Paste JSON content here...",
@@ -166,16 +166,16 @@ const TRANSLATIONS = {
         "qr.error.camera": "Camera access failed.",
         "qr.error.decode": "No valid QR detected.",
         "qr.error.format": "QR payload is invalid.",
-        "qr.help": "QR payload contains your dosage JSON. Share carefully.",
+        "qr.help": "Contains dosage data. Share carefully.",
         "error.nonPositive": "Value must be greater than zero.",
 
         "btn.add": "Add Dose",
-        "btn.save": "Save Record",
+        "btn.save": "Save",
         "btn.cancel": "Cancel",
         "btn.edit": "Edit",
 
         "modal.weight.title": "Body Weight",
-        "modal.weight.desc": "Weight is used to calculate volume of distribution (Vd ≈ 2.0 L/kg), affecting peak concentration estimates.",
+        "modal.weight.desc": "Affects peak concentration estimates.",
         "modal.dose.add_title": "Add Dose",
         "modal.dose.edit_title": "Edit Dose",
 
@@ -190,7 +190,7 @@ const TRANSLATIONS = {
         "field.sl_duration": "Hold Duration",
         "field.sl_custom": "Custom θ",
 
-        "sl.instructions": "While holding the tablet for the suggested time, try to swallow as little saliva as possible and continue holding the dissolved saliva even after the tablet fully melts until you reach your target time.",
+        "sl.instructions": "Minimize swallowing. Hold dissolved saliva until target time.",
         "sl.mode.quick": "2m",
         "sl.mode.casual": "5m",
         "sl.mode.standard": "10m",
@@ -226,19 +226,19 @@ const TRANSLATIONS = {
         "timeline.dose_label": "Доза",
         "timeline.bio_label": "Био E2",
         "drawer.title": "Управление дозами",
-        "drawer.desc": "Экспорт, резервное копирование, очистка или импорт истории дозировок.",
+        "drawer.desc": "Управление историей доз.",
         "drawer.clear": "Очистить все дозы",
-        "drawer.clear_confirm": "Удалить все записи о дозировках? Это действие нельзя отменить.",
+        "drawer.clear_confirm": "Удалить все? Нельзя отменить.",
         "drawer.save": "Сохранить дозы (JSON)",
-        "drawer.save_hint": "Скачать резервную копию JSON текущего списка.",
+        "drawer.save_hint": "Скачать резервную копию JSON.",
         "drawer.import": "Импортировать дозы (JSON)",
-        "drawer.import_hint": "Загрузить дозы из файла JSON и заменить текущий список.",
+        "drawer.import_hint": "Импорт JSON с заменой.",
         "drawer.empty_export": "Нет доз для экспорта.",
         "drawer.import_error": "Ошибка импорта. Пожалуйста, проверьте правильность файла.",
         "drawer.import_success": "Дозы успешно импортированы.",
         "drawer.close": "Закрыть панель",
         "drawer.qr": "QR Импорт/Экспорт",
-        "drawer.qr_hint": "Поделитесь или восстановите свои дозы с помощью QR-кода.",
+        "drawer.qr_hint": "QR-код для обмена/восстановления.",
         "drawer.lang": "Язык",
         "drawer.lang_hint": "Переключить язык интерфейса.",
         "import.title": "Импорт данных",
@@ -262,16 +262,16 @@ const TRANSLATIONS = {
         "qr.error.camera": "Ошибка доступа к камере.",
         "qr.error.decode": "Действительный QR не обнаружен.",
         "qr.error.format": "Неверный формат QR.",
-        "qr.help": "QR-код содержит ваш JSON с дозировками. Делитесь с осторожностью.",
+        "qr.help": "Содержит ваши данные. Делитесь осторожно.",
         "error.nonPositive": "Значение должно быть больше нуля.",
 
         "btn.add": "Добавить дозу",
-        "btn.save": "Сохранить запись",
+        "btn.save": "Сохранить",
         "btn.cancel": "Отмена",
         "btn.edit": "Редактировать",
 
         "modal.weight.title": "Вес тела",
-        "modal.weight.desc": "Вес используется для расчета объема распределения (Vd ≈ 2.0 л/кг), влияющего на оценку пиковой концентрации.",
+        "modal.weight.desc": "Влияет на оценку пиковой концентрации.",
         "modal.dose.add_title": "Добавить дозу",
         "modal.dose.edit_title": "Редактировать дозу",
 
@@ -286,7 +286,7 @@ const TRANSLATIONS = {
         "field.sl_duration": "Длительность удержания",
         "field.sl_custom": "Пользовательский θ",
 
-        "sl.instructions": "Удерживая таблетку в течение рекомендованного времени, старайтесь глотать как можно меньше слюны и продолжайте удерживать растворенную слюну даже после полного растворения таблетки, пока не достигнете целевого времени.",
+        "sl.instructions": "Меньше глотайте. Держите слюну до целевого времени.",
         "sl.mode.quick": "2м",
         "sl.mode.casual": "5м",
         "sl.mode.standard": "10м",
@@ -373,9 +373,19 @@ const getRawDoseMG = (event: DoseEvent) => {
 
 const WeightEditorModal = ({ isOpen, onClose, currentWeight, onSave }: any) => {
     const { t } = useTranslation();
-    const [weight, setWeight] = useState(currentWeight);
+    const [weightStr, setWeightStr] = useState(currentWeight.toString());
 
-    useEffect(() => setWeight(currentWeight), [currentWeight, isOpen]);
+    useEffect(() => setWeightStr(currentWeight.toString()), [currentWeight, isOpen]);
+
+    const handleSave = () => {
+        const val = parseFloat(weightStr);
+        if (!isNaN(val) && val > 0) {
+            onSave(val);
+            onClose();
+        } else {
+            alert(t('error.nonPositive'));
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -383,18 +393,22 @@ const WeightEditorModal = ({ isOpen, onClose, currentWeight, onSave }: any) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">{t('modal.weight.title')}</h3>
-                <div className="flex items-center justify-between mb-8 px-4">
-                    <button onClick={() => setWeight((w: number) => Math.max(30, Number((w - 0.5).toFixed(1))))} className="p-4 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition">
-                        <ChevronDown size={24} />
-                    </button>
-                    <div className="text-center">
-                        <div className="text-5xl font-black text-pink-400 tabular-nums">{weight.toFixed(1)}</div>
-                        <div className="text-sm font-medium text-gray-400 mt-1">kg</div>
+                
+                <div className="flex justify-center mb-8">
+                    <div className="relative flex flex-col items-center">
+                        <input 
+                            type="number" 
+                            inputMode="decimal"
+                            value={weightStr}
+                            onChange={(e) => setWeightStr(e.target.value)}
+                            className="text-5xl font-black text-pink-400 tabular-nums w-48 text-center bg-transparent border-b-2 border-pink-100 focus:border-pink-400 outline-none transition-colors pb-2"
+                            placeholder="0.0"
+                            autoFocus
+                        />
+                        <div className="text-sm font-medium text-gray-400 mt-2">kg</div>
                     </div>
-                    <button onClick={() => setWeight((w: number) => Math.min(200, Number((w + 0.5).toFixed(1))))} className="p-4 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition">
-                        <ChevronUp size={24} />
-                    </button>
                 </div>
+
                 <div className="bg-blue-50 p-4 rounded-xl mb-6 flex gap-3 items-start">
                     <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-blue-700 leading-relaxed">
@@ -403,7 +417,7 @@ const WeightEditorModal = ({ isOpen, onClose, currentWeight, onSave }: any) => {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={onClose} className="flex-1 py-3.5 text-gray-600 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition">{t('btn.cancel')}</button>
-                    <button onClick={() => { onSave(weight); onClose(); }} className="flex-1 py-3.5 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition">{t('btn.save')}</button>
+                    <button onClick={handleSave} className="flex-1 py-3.5 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition">{t('btn.save')}</button>
                 </div>
             </div>
         </div>
