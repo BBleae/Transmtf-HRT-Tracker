@@ -39,7 +39,7 @@ const TRANSLATIONS = {
         "timeline.empty": "暂无记录，请点击右下角添加",
         "timeline.delete_confirm": "确定删除这条记录吗？",
         "timeline.dose_label": "剂量",
-        "timeline.bio_label": "生物 E2",
+        "timeline.bio_label": "剂量",
         "drawer.title": "实用工具",
         "drawer.clear": "清空所有剂量",
         "drawer.clear_confirm": "删除所有记录？不可撤销。",
@@ -162,7 +162,7 @@ const TRANSLATIONS = {
         "timeline.empty": "No records yet. Tap + to add.",
         "timeline.delete_confirm": "Are you sure you want to delete this record?",
         "timeline.dose_label": "Dose",
-        "timeline.bio_label": "Bio E2",
+        "timeline.bio_label": "Dose",
         "drawer.title": "Utilities",
         "drawer.clear": "Clear All Dosages",
         "drawer.clear_confirm": "Clear all? Irreversible.",
@@ -285,7 +285,7 @@ const TRANSLATIONS = {
         "timeline.empty": "Записей нет. Нажмите +, чтобы добавить.",
         "timeline.delete_confirm": "Вы уверены, что хотите удалить эту запись?",
         "timeline.dose_label": "Доза",
-        "timeline.bio_label": "Био E2",
+        "timeline.bio_label": "Доза",
         "drawer.title": "Инструменты",
         "drawer.clear": "Очистить все дозы",
         "drawer.clear_confirm": "Удалить все? Нельзя отменить.",
@@ -1082,7 +1082,7 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                             {/* Dose Inputs */}
                             {(route !== Route.patchApply || patchMode === "dose") && (
                                 <div className="grid grid-cols-2 gap-4">
-                                    {(ester !== Ester.E2 || route === Route.gel || route === Route.oral || route === Route.sublingual) && (
+                                    {(ester !== Ester.E2) && (
                                         <div className="space-y-2">
                                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">{t('field.dose_raw')}</label>
                                             <input 
@@ -1095,7 +1095,7 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                                     )}
                                     <div className={`space-y-2 ${(ester === Ester.E2 && route !== Route.gel && route !== Route.oral && route !== Route.sublingual) ? "col-span-2" : ""}`}>
                                         <label className="block text-xs font-bold text-pink-400 uppercase tracking-wider">
-                                            {t('field.dose_e2')}
+                                            {route === Route.patchApply ? t('field.dose_raw') : t('field.dose_e2')}
                                         </label>
                                         <input 
                                             type="number" inputMode="decimal"
@@ -1996,7 +1996,6 @@ const AppContent = () => {
                                                         {ev.route !== Route.patchRemove && (
                                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-700">
                                                                 <span>{`${t('timeline.dose_label')}: ${(getRawDoseMG(ev) ?? 0).toFixed(2)} mg`}</span>
-                                                                <span>{`${t('timeline.bio_label')}: ${getBioDoseMG(ev).toFixed(2)} mg`}</span>
                                                             </div>
                                                         )}
                                                     </div>
