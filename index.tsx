@@ -800,8 +800,11 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                     setLastEditedField('bio');
                 } else {
                     setPatchMode("dose");
-                    const bioValue = getBioDoseMG(eventToEdit).toFixed(3);
-                    setE2Dose(bioValue);
+                    // Fix: Show E2 Equivalent (MW only), not Bioavailable dose
+                    const factor = getToE2Factor(eventToEdit.ester);
+                    const e2Val = eventToEdit.doseMG * factor;
+                    setE2Dose(e2Val.toFixed(3));
+
                     if (eventToEdit.ester !== Ester.E2) {
                         setRawDose(eventToEdit.doseMG.toFixed(3));
                         setLastEditedField('raw');
@@ -1165,7 +1168,6 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                                             </div>
                                             <div className="text-xs text-teal-600 bg-white/50 p-2 rounded-lg flex justify-between items-center">
                                                 <span>Absorption θ ≈ {currentTheta.toFixed(2)}</span>
-                                                <span className="font-bold" title="Estimated Bioavailable Dose">Bio ≈ {bioDoseVal.toFixed(3)} mg</span>
                                             </div>
                                         </div>
                                     ) : (
@@ -1173,7 +1175,6 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                                             <input type="number" step="0.01" max="1" min="0" value={customTheta} onChange={e => setCustomTheta(e.target.value)} className="w-full p-3 border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" placeholder="0.0 - 1.0" />
                                             <div className="text-xs text-teal-600 bg-white/50 p-2 rounded-lg flex justify-between items-center">
                                                 <span>Absorption θ ≈ {activeTheta.toFixed(2)}</span>
-                                                <span className="font-bold" title="Estimated Bioavailable Dose">Bio ≈ {bioDoseVal.toFixed(3)} mg</span>
                                             </div>
                                         </div>
                                     )}
