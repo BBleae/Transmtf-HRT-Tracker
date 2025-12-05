@@ -8,7 +8,7 @@ import {
 import {
     Plus, Trash2, Syringe, Pill, Droplet, Sticker, X, 
     Settings, ChevronDown, ChevronUp, Save, Clock, Languages, Calendar,
-    Activity, Info, ZoomIn, RotateCcw, Menu, Download, Upload, QrCode, Camera, Image as ImageIcon, Copy, Github, Lock
+    Activity, Info, ZoomIn, RotateCcw, Download, Upload, QrCode, Camera, Image as ImageIcon, Copy, Github, Lock
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import jsQR from 'jsqr';
@@ -27,6 +27,7 @@ const TRANSLATIONS = {
         "app.title": "HRT 记录",
         "nav.home": "概览",
         "nav.history": "记录",
+        "nav.settings": "设置",
         "status.estimate": "当前估算浓度",
         "status.weight": "体重",
         "chart.title": "雌二醇浓度 (pg/mL)",
@@ -106,7 +107,7 @@ const TRANSLATIONS = {
         "field.route": "给药途径",
         "field.ester": "药物种类",
         "field.dose_raw": "药物剂量 (mg)",
-        "field.dose_e2": "生物可利用 E2 (mg)",
+        "field.dose_e2": "等效 E2 (mg)",
         "field.patch_mode": "输入模式",
         "field.patch_rate": "释放速率 (µg/天)",
         "field.patch_total": "总剂量 (mg)",
@@ -123,12 +124,15 @@ const TRANSLATIONS = {
         "route.injection": "肌注 (Injection)",
         "route.oral": "口服 (Oral)",
         "route.sublingual": "舌下 (Sublingual)",
-        "route.gel": "凝胶 (Gel)",
+        "route.gel": "凝胶 (Beta)",
         "gel.site.arm": "手臂 (Arm)",
         "gel.site.thigh": "大腿 (Thigh)",
         "gel.site.scrotal": "阴囊 (Scrotal)",
-        "route.patchApply": "贴片 (Patch Apply)",
-        "route.patchRemove": "贴片",
+        "beta.gel": "Beta：凝胶生物利用率数据有限，数值为近似估计。",
+        "beta.patch": "Beta：贴片参数为近似值，请记录贴上与移除时间。",
+        "beta.patch_remove": "记录移除时间即可，剂量会自动按贴片佩戴时长计算。",
+        "route.patchApply": "贴片贴上 (Beta)",
+        "route.patchRemove": "贴片移除 (Beta)",
 
         "ester.E2": "雌二醇 (E2)",
         "ester.EV": "戊酸雌二醇 (EV)",
@@ -146,6 +150,7 @@ const TRANSLATIONS = {
         "app.title": "HRT Recorder",
         "nav.home": "Overview",
         "nav.history": "History",
+        "nav.settings": "Settings",
         "status.estimate": "Current Estimate",
         "status.weight": "Weight",
         "chart.title": "E2 Concentration Graph (pg/mL)",
@@ -225,7 +230,7 @@ const TRANSLATIONS = {
         "field.route": "Route",
         "field.ester": "Compound",
         "field.dose_raw": "Dose (mg)",
-        "field.dose_e2": "Bioavailable E2 (mg)",
+        "field.dose_e2": "E2 Equivalent (mg)",
         "field.patch_mode": "Input Mode",
         "field.patch_rate": "Rate (µg/day)",
         "field.patch_total": "Total Dose (mg)",
@@ -242,12 +247,15 @@ const TRANSLATIONS = {
         "route.injection": "Injection",
         "route.oral": "Oral",
         "route.sublingual": "Sublingual",
-        "route.gel": "Gel",
+        "route.gel": "Gel (Beta)",
         "gel.site.arm": "Arm",
         "gel.site.thigh": "Thigh",
         "gel.site.scrotal": "Scrotal",
-        "route.patchApply": "Patch Apply",
-        "route.patchRemove": "Patch",
+        "beta.gel": "Beta: gel bioavailability is approximate; data limited.",
+        "beta.patch": "Beta: patch parameters are approximate. Log both apply and removal times.",
+        "beta.patch_remove": "Just record the removal time; dose is derived from wear duration.",
+        "route.patchApply": "Patch Apply (Beta)",
+        "route.patchRemove": "Patch Remove (Beta)",
 
         "ester.E2": "Estradiol (E2)",
         "ester.EV": "Estradiol Valerate (EV)",
@@ -265,6 +273,7 @@ const TRANSLATIONS = {
         "app.title": "HRT Recorder",
         "nav.home": "Обзор",
         "nav.history": "История",
+        "nav.settings": "Настройки",
         "status.estimate": "Текущая оценка",
         "status.weight": "Вес",
         "chart.title": "График концентрации E2 (пг/мл)",
@@ -350,7 +359,7 @@ const TRANSLATIONS = {
         "field.route": "Способ",
         "field.ester": "Соединение",
         "field.dose_raw": "Доза (мг)",
-        "field.dose_e2": "Биодоступный E2 (мг)",
+        "field.dose_e2": "Эквивалент E2 (мг)",
         "field.patch_mode": "Режим ввода",
         "field.patch_rate": "Скорость (мкг/день)",
         "field.patch_total": "Общая доза (мг)",
@@ -367,12 +376,15 @@ const TRANSLATIONS = {
         "route.injection": "Инъекция",
         "route.oral": "Перорально",
         "route.sublingual": "Сублингвально",
-        "route.gel": "Гель",
+        "route.gel": "Гель (Beta)",
         "gel.site.arm": "Рука (Arm)",
         "gel.site.thigh": "Бедро (Thigh)",
         "gel.site.scrotal": "Мошонка (Scrotal)",
-        "route.patchApply": "Пластырь (Наложение)",
-        "route.patchRemove": "Пластырь (Снятие)",
+        "beta.gel": "Beta: биодоступность геля приблизительная, данных мало.",
+        "beta.patch": "Beta: параметры пластыря приблизительны. Отмечайте время наклеивания и снятия.",
+        "beta.patch_remove": "Достаточно указать время снятия — доза вычислится по времени ношения.",
+        "route.patchApply": "Пластырь (Наложение) Beta",
+        "route.patchRemove": "Пластырь (Снятие) Beta",
 
         "ester.E2": "Эстрадиол (E2)",
         "ester.EV": "Эстрадиол валерат (EV)",
@@ -843,13 +855,9 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
         setLastEditedField('raw');
         const v = parseFloat(val);
         if (!isNaN(v)) {
-            const factor = getToE2Factor(ester);
-            const e2Equivalent = v * factor;
-            if (bioMultiplier > 0) {
-                setE2Dose((e2Equivalent * bioMultiplier).toFixed(3));
-            } else {
-                setE2Dose("");
-            }
+            const factor = getToE2Factor(ester) || 1;
+            const e2Equivalent = v * factor; // convert compound mg -> E2 equivalent (pre-bio)
+            setE2Dose(e2Equivalent.toFixed(3));
         } else {
             setE2Dose("");
         }
@@ -859,20 +867,15 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
         setE2Dose(val);
         setLastEditedField('bio');
         const v = parseFloat(val);
-        if (!isNaN(v) && bioMultiplier > 0) {
-            const e2Equivalent = v / bioMultiplier;
+        if (!isNaN(v)) {
+            const factor = getToE2Factor(ester) || 1;
             if (ester === Ester.E2) {
-                setRawDose(e2Equivalent.toFixed(3));
+                setRawDose(v.toFixed(3));
             } else {
-                const factor = getToE2Factor(ester);
-                setRawDose((e2Equivalent / factor).toFixed(3));
+                setRawDose((v / factor).toFixed(3));
             }
         } else {
-            if (ester === Ester.E2) {
-                setRawDose(val);
-            } else {
-                setRawDose("");
-            }
+            setRawDose("");
         }
     };
 
@@ -894,8 +897,8 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
             timeH = new Date().getTime() / 3600000;
         }
         
-        let bioDoseVal = parseFloat(e2Dose);
-        if (isNaN(bioDoseVal)) bioDoseVal = 0;
+        let e2Equivalent = parseFloat(e2Dose);
+        if (isNaN(e2Equivalent)) e2Equivalent = 0;
         let finalDose = 0;
 
         const extras: any = {};
@@ -910,11 +913,12 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
             finalDose = 0;
             extras[ExtraKey.releaseRateUGPerDay] = rateVal;
         } else if (route !== Route.patchRemove) {
-            if (!Number.isFinite(bioDoseVal) || bioDoseVal <= 0 || bioMultiplier <= 0) {
+            if (!Number.isFinite(e2Equivalent) || e2Equivalent <= 0) {
                 showDialog('alert', nonPositiveMsg);
                 return;
             }
-            finalDose = bioDoseVal / bioMultiplier;
+            const factor = getToE2Factor(ester) || 1;
+            finalDose = e2Equivalent / factor; // store compound mg
         }
 
         if (route === Route.sublingual && slExtras) {
@@ -999,14 +1003,18 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                         label={t('field.route')}
                         value={route}
                         onChange={(val) => setRoute(val as Route)}
-                        options={Object.values(Route)
-                            .filter(r => r !== Route.patchRemove)
-                            .map(r => ({
-                                value: r,
-                                label: t(`route.${r}`).split('(')[0].trim(),
-                                icon: getRouteIcon(r)
-                            }))}
+                        options={Object.values(Route).map(r => ({
+                            value: r,
+                            label: t(`route.${r}`),
+                            icon: getRouteIcon(r)
+                        }))}
                     />
+
+                    {route === Route.patchRemove && (
+                        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-xl">
+                            {t('beta.patch_remove')}
+                        </div>
+                    )}
 
                     {route !== Route.patchRemove && (
                         <>
@@ -1025,7 +1033,7 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
 
                             {/* Gel Site Selector */}
                             {route === Route.gel && (
-                                <div className="mb-4">
+                                <div className="mb-4 space-y-2">
                                     <CustomSelect
                                         label={t('field.gel_site')}
                                         value={gelSite.toString()}
@@ -1035,24 +1043,32 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                                             label: t(`gel.site.${site}`)
                                         }))}
                                     />
+                                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-xl">
+                                        {t('beta.gel')}
+                                    </div>
                                 </div>
                             )}
 
                             {/* Patch Mode */}
                             {route === Route.patchApply && (
-                                <div className="p-1 bg-gray-100 rounded-xl flex">
-                                    <button 
-                                        onClick={() => setPatchMode("dose")} 
-                                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${patchMode === "dose" ? "bg-white shadow text-gray-800" : "text-gray-500"}`}
-                                    >
-                                        {t('field.patch_total')}
-                                    </button>
-                                    <button 
-                                        onClick={() => setPatchMode("rate")} 
-                                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${patchMode === "rate" ? "bg-white shadow text-gray-800" : "text-gray-500"}`}
-                                    >
-                                        {t('field.patch_rate')}
-                                    </button>
+                                <div className="space-y-2">
+                                    <div className="p-1 bg-gray-100 rounded-xl flex">
+                                        <button 
+                                            onClick={() => setPatchMode("dose")} 
+                                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${patchMode === "dose" ? "bg-white shadow text-gray-800" : "text-gray-500"}`}
+                                        >
+                                            {t('field.patch_total')}
+                                        </button>
+                                        <button 
+                                            onClick={() => setPatchMode("rate")} 
+                                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${patchMode === "rate" ? "bg-white shadow text-gray-800" : "text-gray-500"}`}
+                                        >
+                                            {t('field.patch_rate')}
+                                        </button>
+                                    </div>
+                                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-xl">
+                                        {t('beta.patch')}
+                                    </div>
                                 </div>
                             )}
 
@@ -1791,7 +1807,6 @@ const AppContent = () => {
     const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<DoseEvent | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -1799,13 +1814,13 @@ const AppContent = () => {
     const [isPasswordDisplayOpen, setIsPasswordDisplayOpen] = useState(false);
     const [isPasswordInputOpen, setIsPasswordInputOpen] = useState(false);
 
-    const [currentView, setCurrentView] = useState<'home' | 'history'>('home');
+    const [currentView, setCurrentView] = useState<'home' | 'history' | 'settings'>('home');
 
     useEffect(() => {
-        const shouldLock = isDrawerOpen || isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isQrModalOpen || isImportModalOpen;
+        const shouldLock = isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isQrModalOpen || isImportModalOpen;
         document.body.style.overflow = shouldLock ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [isDrawerOpen, isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isQrModalOpen, isImportModalOpen]);
+    }, [isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isQrModalOpen, isImportModalOpen]);
     const [pendingImportText, setPendingImportText] = useState<string | null>(null);
 
     useEffect(() => { localStorage.setItem('hrt-events', JSON.stringify(events)); }, [events]);
@@ -2001,11 +2016,9 @@ const AppContent = () => {
         }
     };
 
-    const dimmedStyle: React.CSSProperties | undefined = isDrawerOpen ? { filter: 'grayscale(0.8)', opacity: 0.45 } : undefined;
-
     return (
         <div className="relative min-h-screen pb-32 max-w-lg mx-auto bg-gray-50 shadow-2xl overflow-hidden font-sans">
-            <div className="transition duration-300" style={dimmedStyle}>
+            <div className="transition duration-300">
                 {/* Header */}
                 {currentView === 'home' && (
                     <header className="bg-white px-8 pt-12 pb-8 rounded-b-[2.5rem] shadow-xl shadow-gray-100 z-10 sticky top-0">
@@ -2019,17 +2032,7 @@ const AppContent = () => {
                                     <span className="text-xl font-bold text-gray-400">pg/mL</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2 items-end">
-                                <div className="flex gap-2">
-                                    <button 
-                                        onClick={() => setIsDrawerOpen(true)}
-                                        className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
-                                        aria-label={t('drawer.title')}
-                                    >
-                                        <Menu size={20} />
-                                    </button>
-                                </div>
-                            </div>
+                            <div className="flex flex-col gap-2 items-end" />
                         </div>
                         <div className="flex gap-4">
                              <button onClick={() => setIsWeightModalOpen(true)} className="flex items-center gap-2 bg-gray-50 pl-3 pr-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-gray-100 transition">
@@ -2095,7 +2098,7 @@ const AppContent = () => {
                                                     </div>
                                                     <div className="text-xs text-gray-500 font-medium space-y-1">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="truncate">{t(`route.${ev.route}`).split('(')[0]}</span>
+                                                            <span className="truncate">{t(`route.${ev.route}`)}</span>
                                                             {ev.extras[ExtraKey.releaseRateUGPerDay] && (
                                                                 <>
                                                                     <span className="text-gray-300">•</span>
@@ -2125,6 +2128,107 @@ const AppContent = () => {
                             ))}
                         </div>
                     )}
+
+                    {/* Settings */}
+                    {currentView === 'settings' && (
+                        <div className="space-y-4 pt-4">
+                            <div className="px-2">
+                                <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                    <Settings size={20} className="text-pink-400" /> {t('drawer.title')}
+                                </h2>
+                            </div>
+
+                            <button
+                                onClick={handleSaveDosages}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition bg-white"
+                            >
+                                <Download className="text-pink-400" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.save')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => setIsImportModalOpen(true)}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition bg-white"
+                            >
+                                <Upload className="text-teal-500" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.import')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.import_hint')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => setIsQrModalOpen(true)}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition bg-white"
+                            >
+                                <QrCode className="text-indigo-500" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.qr')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.qr_hint')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    if (lang === 'zh') setLang('en');
+                                    else if (lang === 'en') setLang('ru');
+                                    else setLang('zh');
+                                }}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition bg-white"
+                            >
+                                <Languages className="text-blue-500" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.lang')} ({lang.toUpperCase()})</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.lang_hint')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    showDialog('confirm', t('drawer.model_confirm'), () => {
+                                        window.open('https://misaka23323.com/articles/estrogen-model-summary', '_blank');
+                                    });
+                                }}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition bg-white"
+                            >
+                                <Info className="text-purple-500" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.model_title')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.model_desc')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={handleClearAllEvents}
+                                disabled={!events.length}
+                                className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition bg-white ${events.length ? 'border-gray-200 hover:border-red-200 hover:bg-red-50' : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'}`}
+                            >
+                                <Trash2 className="text-red-400" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.clear')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.clear_confirm')}</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    showDialog('confirm', t('drawer.github_confirm'), () => {
+                                        window.open('https://github.com/SmirnovaOyama/Oyama-s-HRT-recorder', '_blank');
+                                    });
+                                }}
+                                className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition bg-white"
+                            >
+                                <Github className="text-gray-700" size={20} />
+                                <div className="text-left">
+                                    <p className="font-bold text-gray-900 text-sm">{t('drawer.github')}</p>
+                                    <p className="text-xs text-gray-500">{t('drawer.github_desc')}</p>
+                                </div>
+                            </button>
+                        </div>
+                    )}
                 </main>
             </div>
 
@@ -2143,6 +2247,13 @@ const AppContent = () => {
                 >
                     <Calendar size={24} />
                     <span className="text-xs font-bold">{t('nav.history')}</span>
+                </button>
+                <button 
+                    onClick={() => setCurrentView('settings')}
+                    className={`flex flex-col items-center gap-1 transition-colors ${currentView === 'settings' ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <Settings size={24} />
+                    <span className="text-xs font-bold">{t('nav.settings')}</span>
                 </button>
             </nav>
 
@@ -2191,126 +2302,9 @@ const AppContent = () => {
                 onClose={() => setIsImportModalOpen(false)}
                 onImportJson={(payload) => {
                     const ok = importEventsFromJson(payload);
-                    if (ok) setIsDrawerOpen(false);
                     return ok;
                 }}
             />
-
-            <div
-                className={`absolute inset-0 bg-black/40 transition-opacity duration-300 z-30 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-                onClick={() => setIsDrawerOpen(false)}
-            />
-
-            <aside
-                className={`absolute top-0 right-0 h-full w-80 max-w-full bg-white shadow-2xl z-40 transition-transform duration-300 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
-                role="dialog"
-                aria-label={t('drawer.title')}
-            >
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-gray-900">{t('drawer.title')}</h2>
-                    <button
-                        onClick={() => setIsDrawerOpen(false)}
-                        className="p-2 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100"
-                        aria-label={t('drawer.close')}
-                    >
-                        <X size={18} />
-                    </button>
-                </div>
-
-                <div className="p-6 flex-1 overflow-y-auto space-y-4">
-                    <button
-                        onClick={handleSaveDosages}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-pink-200 hover:bg-pink-50 transition"
-                    >
-                        <Download className="text-pink-400" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.save')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.save_hint')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setIsImportModalOpen(true)}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-teal-200 hover:bg-teal-50 transition"
-                    >
-                        <Upload className="text-teal-500" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.import')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.import_hint')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setIsQrModalOpen(true)}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition"
-                    >
-                        <QrCode className="text-indigo-500" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.qr')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.qr_hint')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            if (lang === 'zh') setLang('en');
-                            else if (lang === 'en') setLang('ru');
-                            else setLang('zh');
-                        }}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition"
-                    >
-                        <Languages className="text-blue-500" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.lang')} ({lang.toUpperCase()})</p>
-                            <p className="text-xs text-gray-500">{t('drawer.lang_hint')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            showDialog('confirm', t('drawer.model_confirm'), () => {
-                                window.open('https://misaka23323.com/articles/estrogen-model-summary', '_blank');
-                            });
-                        }}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition"
-                    >
-                        <Info className="text-purple-500" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.model_title')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.model_desc')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={handleClearAllEvents}
-                        disabled={!events.length}
-                        className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition ${events.length ? 'border-gray-200 hover:border-red-200 hover:bg-red-50' : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'}`}
-                    >
-                        <Trash2 className="text-red-400" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.clear')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.clear_confirm')}</p>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            showDialog('confirm', t('drawer.github_confirm'), () => {
-                                window.open('https://github.com/SmirnovaOyama/Oyama-s-HRT-recorder', '_blank');
-                            });
-                        }}
-                        className="w-full flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition"
-                    >
-                        <Github className="text-gray-700" size={20} />
-                        <div className="text-left">
-                            <p className="font-bold text-gray-900 text-sm">{t('drawer.github')}</p>
-                            <p className="text-xs text-gray-500">{t('drawer.github_desc')}</p>
-                        </div>
-                    </button>
-                </div>
-
-
-            </aside>
         </div>
     );
 };
