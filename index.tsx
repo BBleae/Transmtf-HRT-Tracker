@@ -18,7 +18,7 @@ import {
     getBioavailabilityMultiplier, encryptData, decryptData, GEL_SITE_ORDER, GelSiteParams
 } from './logic.ts';
 
-const APP_VERSION = "Release 1.0.0";
+const APP_VERSION = "Stable 1.1.0";
 
 // --- Localization ---
 
