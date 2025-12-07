@@ -2,7 +2,7 @@
 
 HRT Recorder Web（HRT 网页记录工具）
 
-A privacy-focused, web-based tool for simulating and tracking estradiol levels during Hormone Replacement Therapy (HRT).
+A privacy-focused, web-based tool for simulating and tracking estradiol levels during Hormone Replacement Therapy (HRT).<br>
 这是一个注重隐私的网页工具，用于在激素替代疗法（HRT）期间模拟和追踪雌二醇水平。
 
 ## 🧠 Algorithm & Core Logic 算法逻辑
