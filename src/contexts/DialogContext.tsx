@@ -59,7 +59,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
                             )}
                             <button 
                                 onClick={handleConfirm} 
-                                className="flex-1 py-3 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition"
+                                className="flex-1 py-3 bg-[#f6c4d7] text-white font-bold rounded-xl hover:bg-[#f3b4cb] transition"
                             >
                                 {t('btn.ok')}
                             </button>

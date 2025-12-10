@@ -7,25 +7,32 @@ const WeightEditorModal = ({ isOpen, onClose, currentWeight, onSave }: any) => {
     const { t } = useTranslation();
     const { showDialog } = useDialog();
     const [weightStr, setWeightStr] = useState(currentWeight.toString());
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => setWeightStr(currentWeight.toString()), [currentWeight, isOpen]);
 
     const handleSave = () => {
+        if (isSaving) return;
+        setIsSaving(true);
         const val = parseFloat(weightStr);
         if (!isNaN(val) && val > 0) {
             onSave(val);
             onClose();
         } else {
             showDialog('alert', t('error.nonPositive'));
+            setIsSaving(false);
         }
+        setIsSaving(false);
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">{t('modal.weight.title')}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-t-3xl shadow-md shadow-gray-900/10 w-full max-w-lg p-6 animate-in slide-in-from-bottom duration-300 safe-area-pb">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900">{t('modal.weight.title')}</h3>
+                </div>
                 
                 <div className="flex justify-center mb-8">
                     <div className="relative flex flex-col items-center">
@@ -50,7 +57,20 @@ const WeightEditorModal = ({ isOpen, onClose, currentWeight, onSave }: any) => {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={onClose} className="flex-1 py-3.5 text-gray-600 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition">{t('btn.cancel')}</button>
-                    <button onClick={handleSave} className="flex-1 py-3.5 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition">{t('btn.save')}</button>
+                    <button 
+                        onClick={handleSave} 
+                        disabled={isSaving}
+                        className={`flex-1 py-3.5 bg-[#f6c4d7] text-white font-bold rounded-xl hover:bg-[#f3b4cb] transition ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                        {isSaving ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                                {t('btn.save')}
+                            </span>
+                        ) : (
+                            t('btn.save')
+                        )}
+                    </button>
                 </div>
             </div>
         </div>

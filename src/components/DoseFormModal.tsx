@@ -5,9 +5,9 @@ import { useDialog } from '../contexts/DialogContext';
 import CustomSelect from './CustomSelect';
 import { getRouteIcon } from '../utils/helpers';
 import { Route, Ester, ExtraKey, DoseEvent, SL_TIER_ORDER, SublingualTierParams, getBioavailabilityMultiplier, getToE2Factor } from '../../logic';
-import { Calendar, X, Clock, Info, Save } from 'lucide-react';
+import { Calendar, X, Clock, Info, Save, Trash2 } from 'lucide-react';
 
-const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
+const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave, onDelete }: any) => {
     const { t } = useTranslation();
     const { showDialog } = useDialog();
     const dateInputRef = useRef<HTMLInputElement>(null);
@@ -163,7 +163,11 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
         }
     }, [bioMultiplier, ester, route]);
 
+    const [isSaving, setIsSaving] = useState(false);
+
     const handleSave = () => {
+        if (isSaving) return;
+        setIsSaving(true);
         let timeH = new Date(dateStr).getTime() / 3600000;
         if (isNaN(timeH)) {
             timeH = new Date().getTime() / 3600000;
@@ -188,6 +192,7 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
             const rateVal = parseFloat(patchRate);
             if (!Number.isFinite(rateVal) || rateVal <= 0) {
                 showDialog('alert', nonPositiveMsg);
+                setIsSaving(false);
                 return;
             }
             finalDose = 0;
@@ -196,12 +201,14 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
             const raw = parseFloat(rawDose);
             if (!Number.isFinite(raw) || raw <= 0) {
                 showDialog('alert', nonPositiveMsg);
+                setIsSaving(false);
                 return;
             }
             finalDose = raw; // patch input is compound dose on patch
         } else if (route !== Route.patchRemove) {
             if (!Number.isFinite(e2Equivalent) || e2Equivalent <= 0) {
                 showDialog('alert', nonPositiveMsg);
+                setIsSaving(false);
                 return;
             }
             const factor = getToE2Factor(ester) || 1;
@@ -226,6 +233,7 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
         };
 
         onSave(newEvent);
+        setIsSaving(false);
         onClose();
     };
 
@@ -259,10 +267,10 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
     const bioDoseVal = parseFloat(e2Dose) || 0;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md h-[85vh] max-h-[90vh] transform transition-all scale-100 flex flex-col overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-t-3xl shadow-md shadow-gray-900/10 w-full max-w-lg h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                    <h3 className="text-xl font-semibold text-gray-900">
                         {eventToEdit ? t('modal.dose.edit_title') : t('modal.dose.add_title')}
                     </h3>
                     <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
@@ -457,9 +465,33 @@ const DoseFormModal = ({ isOpen, onClose, eventToEdit, onSave }: any) => {
                     )}
                 </div>
 
-                <div className="p-6 border-t border-gray-100 bg-gray-50/50 rounded-b-3xl">
-                    <button onClick={handleSave} className="w-full py-4 bg-pink-400 text-white text-lg font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                        <Save size={20} /> {t('btn.save')}
+                <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 shrink-0 safe-area-pb">
+                    {eventToEdit && (
+                        <button 
+                            onClick={() => {
+                                onClose();
+                                if (onDelete) onDelete(eventToEdit.id);
+                            }} 
+                            className="w-16 h-14 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 border border-red-100 transition-colors"
+                        >
+                            <Trash2 size={20} />
+                        </button>
+                    )}
+                    <button 
+                        onClick={handleSave} 
+                        disabled={isSaving}
+                        className={`flex-1 h-14 bg-[#f6c4d7] text-white text-lg font-bold rounded-xl hover:bg-[#f3b4cb] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                        {isSaving ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                                <span>{t('btn.save')}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Save size={20} /> {t('btn.save')}
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

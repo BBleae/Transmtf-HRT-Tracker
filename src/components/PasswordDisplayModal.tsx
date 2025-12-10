@@ -15,9 +15,9 @@ const PasswordDisplayModal = ({ isOpen, onClose, password }: { isOpen: boolean, 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">{t('export.password_title')}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-[60] animate-in fade-in duration-200">
+            <div className="bg-white rounded-t-3xl shadow-md shadow-gray-900/10 w-full max-w-lg p-6 animate-in slide-in-from-bottom duration-300 safe-area-pb">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">{t('export.password_title')}</h3>
                 <p className="text-sm text-gray-500 mb-6 text-center">{t('export.password_desc')}</p>
                 
                 <div className="bg-gray-100 p-4 rounded-xl mb-6 flex items-center justify-between">
@@ -27,7 +27,7 @@ const PasswordDisplayModal = ({ isOpen, onClose, password }: { isOpen: boolean, 
                     </button>
                 </div>
 
-                <button onClick={onClose} className="w-full py-3.5 bg-pink-400 text-white font-bold rounded-xl hover:bg-pink-500 shadow-lg shadow-pink-100 transition">
+                <button onClick={onClose} className="w-full py-3.5 bg-[#f6c4d7] text-white font-bold rounded-xl hover:bg-[#f3b4cb] transition">
                     {t('btn.ok')}
                 </button>
             </div>

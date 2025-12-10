@@ -74,10 +74,10 @@ const ImportModal = ({ isOpen, onClose, onImportJson }: { isOpen: boolean; onClo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 flex flex-col max-h-[90vh]">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">{t('import.title')}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-t-3xl shadow-md shadow-gray-900/10 w-full max-w-lg p-6 flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300 safe-area-pb">
+                <div className="flex justify-between items-center mb-6 shrink-0">
+                    <h3 className="text-xl font-semibold text-gray-900">{t('import.title')}</h3>
                     <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
                         <X size={20} className="text-gray-500" />
                     </button>
@@ -86,14 +86,14 @@ const ImportModal = ({ isOpen, onClose, onImportJson }: { isOpen: boolean; onClo
                 <div className="flex p-1 bg-gray-100 rounded-xl mb-6 shrink-0">
                     <button
                         onClick={() => setActiveTab('qr')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'bg-white text-gray-900' : 'text-gray-500'}`}
                     >
                         <QrCode size={16} />
                         QR Code
                     </button>
                     <button
                         onClick={() => setActiveTab('json')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'json' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'json' ? 'bg-white text-gray-900' : 'text-gray-500'}`}
                     >
                         <Activity size={16} />
                         JSON

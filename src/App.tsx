@@ -261,10 +261,10 @@ const AppContent = () => {
 
     return (
         <div className="h-screen w-full bg-white flex flex-col font-sans text-gray-900 select-none overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden w-full max-w-lg mx-auto bg-white shadow-2xl">
+            <div className="flex-1 flex flex-col overflow-hidden w-full max-w-lg mx-auto bg-white shadow-xl shadow-gray-900/10">
                 {/* Header */}
                 {currentView === 'home' && (
-                    <header className="bg-white px-8 pt-12 pb-8 rounded-b-[2.5rem] shadow-xl shadow-gray-100 z-10 sticky top-0">
+                    <header className="bg-white px-6 pt-12 pb-6 rounded-b-[2.5rem] shadow-xl shadow-gray-100 z-10 sticky top-0">
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <h1 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('status.estimate')}</h1>
@@ -286,22 +286,26 @@ const AppContent = () => {
                     </header>
                 )}
 
-                <main ref={mainScrollRef} className="flex-1 overflow-y-auto bg-white w-full scrollbar-hide px-6 py-8">
+                <main ref={mainScrollRef} className="flex-1 overflow-y-auto bg-white w-full scrollbar-hide px-4 py-6">
                     {/* Chart */}
                     {currentView === 'home' && (
-                        <ResultChart sim={simulation} />
+                        <ResultChart 
+                            sim={simulation} 
+                            events={events}
+                            onPointClick={handleEditEvent}
+                        />
                     )}
 
                     {/* Timeline */}
                     {currentView === 'history' && (
                         <div className="space-y-6 pt-8">
-                            <div className="flex items-center justify-between px-2">
-                                <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                                   <Activity size={24} className="text-pink-400" /> {t('timeline.title')}
+                            <div className="flex items-center justify-between px-4">
+                                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                                   <Activity size={24} className="text-[#f6c4d7]" /> {t('timeline.title')}
                                 </h2>
                                 <button 
                                     onClick={handleAddEvent}
-                                    className="bg-gray-900 text-white px-4 py-2 rounded-full shadow-lg shadow-gray-900/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform"
+                                    className="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform min-w-[136px] h-11 justify-center"
                                 >
                                     <Plus size={16} />
                                     <span className="font-bold text-sm">{t('btn.add')}</span>
@@ -361,13 +365,6 @@ const AppContent = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev.id); }} 
-                                                    className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent flex items-center justify-end pr-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <Trash2 size={18} className="text-pink-400 hover:text-pink-500" />
-                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -379,10 +376,11 @@ const AppContent = () => {
                     {/* Settings */}
                     {currentView === 'settings' && (
                         <div className="space-y-8 pt-4">
-                            <div className="px-2">
-                                <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                                    <Settings size={24} className="text-pink-400" /> {t('nav.settings')}
+                            <div className="px-4 flex items-center justify-between">
+                                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                                    <Settings size={24} className="text-[#f6c4d7]" /> {t('nav.settings')}
                                 </h2>
+                                <div className="min-w-[136px] h-11" />
                             </div>
 
                             {/* General Settings */}
@@ -491,29 +489,43 @@ const AppContent = () => {
                     )}
                 </main>
 
-                {/* Bottom Navigation */}
-                <nav className="bg-white border-t border-gray-100 px-6 py-4 flex justify-around items-center z-20 safe-area-pb shrink-0">
-                    <button 
-                        onClick={() => setCurrentView('home')}
-                        className={`flex flex-col items-center gap-1 transition-colors ${currentView === 'home' ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <Activity size={24} />
-                        <span className="text-xs font-bold">{t('nav.home')}</span>
-                    </button>
-                    <button 
-                        onClick={() => setCurrentView('history')}
-                        className={`flex flex-col items-center gap-1 transition-colors ${currentView === 'history' ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <Calendar size={24} />
-                        <span className="text-xs font-bold">{t('nav.history')}</span>
-                    </button>
-                    <button 
-                        onClick={() => setCurrentView('settings')}
-                        className={`flex flex-col items-center gap-1 transition-colors ${currentView === 'settings' ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <Settings size={24} />
-                        <span className="text-xs font-bold">{t('nav.settings')}</span>
-                    </button>
+                {/* Bottom Navigation - Glassmorphism capsule style */}
+                <nav className="px-4 pb-4 pt-2 bg-transparent z-20 safe-area-pb shrink-0">
+                    <div className="w-full max-w-lg mx-auto bg-white/70 backdrop-blur-lg border border-white/40 rounded-3xl px-3 py-3 flex items-center justify-between gap-2">
+                        <button
+                            onClick={() => setCurrentView('home')}
+                            className={`flex-1 flex flex-col items-center gap-1 rounded-2xl py-2 transition-all border-2 ${
+                                currentView === 'home'
+                                    ? 'bg-white text-[#8a3459] border-[#f6c4d7]'
+                                    : 'text-gray-500 hover:text-gray-700 border-transparent'
+                            }`}
+                        >
+                            <Activity size={22} className={currentView === 'home' ? 'text-[#f6c4d7]' : ''} />
+                            <span className="text-[11px] font-semibold">{t('nav.home')}</span>
+                        </button>
+                        <button
+                            onClick={() => setCurrentView('history')}
+                            className={`flex-1 flex flex-col items-center gap-1 rounded-2xl py-2 transition-all border-2 ${
+                                currentView === 'history'
+                                    ? 'bg-white text-[#8a3459] border-[#f6c4d7]'
+                                    : 'text-gray-500 hover:text-gray-700 border-transparent'
+                            }`}
+                        >
+                            <Calendar size={22} className={currentView === 'history' ? 'text-[#f6c4d7]' : ''} />
+                            <span className="text-[11px] font-semibold">{t('nav.history')}</span>
+                        </button>
+                        <button
+                            onClick={() => setCurrentView('settings')}
+                            className={`flex-1 flex flex-col items-center gap-1 rounded-2xl py-2 transition-all border-2 ${
+                                currentView === 'settings'
+                                    ? 'bg-white text-[#8a3459] border-[#f6c4d7]'
+                                    : 'text-gray-500 hover:text-gray-700 border-transparent'
+                            }`}
+                        >
+                            <Settings size={22} className={currentView === 'settings' ? 'text-[#f6c4d7]' : ''} />
+                            <span className="text-[11px] font-semibold">{t('nav.settings')}</span>
+                        </button>
+                    </div>
                 </nav>
             </div>
 
@@ -549,6 +561,7 @@ const AppContent = () => {
                 onClose={() => setIsFormOpen(false)}
                 eventToEdit={editingEvent}
                 onSave={handleSaveEvent}
+                onDelete={handleDeleteEvent}
             />
 
             <ImportModal

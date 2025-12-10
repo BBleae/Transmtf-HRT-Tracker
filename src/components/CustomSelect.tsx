@@ -34,7 +34,7 @@ const CustomSelect = ({ value, onChange, options, label }: { value: string, onCh
                 </button>
                 
                 {isOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-md z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
                         {options.map(opt => (
                             <button
                                 key={opt.value}
