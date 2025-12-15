@@ -116,6 +116,7 @@ At the same time, I wish good health to all the women using this web app who are
 # TODO
 -   [ ] Add Japanese language localization support
 -   [ ] Add testosterone calculation support
+-   [ ] 给每个人通过做六项后的数据进行校准，多次校准后改变动力学方程的参数
 
 # LICENCE
 本项目遵守 MIT Licence
