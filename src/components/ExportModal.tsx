@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { QRCodeCanvas } from 'qrcode.react';
-import { encryptData, DoseEvent } from '../../logic';
+import { encryptData, DoseEvent, LabResult } from '../../logic';
 import { X, QrCode, Download, Lock, Copy } from 'lucide-react';
 
-const ExportModal = ({ isOpen, onClose, onExport, events, weight }: { isOpen: boolean, onClose: () => void, onExport: (encrypt: boolean) => void, events: DoseEvent[], weight: number }) => {
+const ExportModal = ({ isOpen, onClose, onExport, events, labResults, weight }: { isOpen: boolean, onClose: () => void, onExport: (encrypt: boolean) => void, events: DoseEvent[], labResults: LabResult[], weight: number }) => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'qr' | 'json'>('qr');
     const [isEncrypted, setIsEncrypted] = useState(false);
@@ -12,12 +12,13 @@ const ExportModal = ({ isOpen, onClose, onExport, events, weight }: { isOpen: bo
     const [password, setPassword] = useState("");
     const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
-    const rawDataString = useMemo(() => events.length ? JSON.stringify({ weight, events }) : '', [events, weight]);
+    const hasData = events.length > 0 || labResults.length > 0;
+    const rawDataString = useMemo(() => hasData ? JSON.stringify({ weight, events, labResults }) : '', [events, weight, labResults, hasData]);
     const QR_CHAR_LIMIT = 1500; // guard against oversized payloads that crash QR generator
     const isTooLargeForQr = displayData.length > QR_CHAR_LIMIT;
 
     useEffect(() => {
-        if (!isOpen) {
+                if (!isOpen) {
             setIsEncrypted(false);
             setActiveTab('qr');
         }

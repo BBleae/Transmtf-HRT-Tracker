@@ -1,16 +1,40 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { formatDate, formatTime } from '../utils/helpers';
-import { SimulationResult, DoseEvent, interpolateConcentration } from '../../logic';
-import { Activity, RotateCcw } from 'lucide-react';
+import { SimulationResult, DoseEvent, interpolateConcentration, LabResult, convertToPgMl } from '../../logic';
+import { Activity, RotateCcw, Info, FlaskConical } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart, ComposedChart, Scatter, Brush
 } from 'recharts';
 
 const CustomTooltip = ({ active, payload, label, t, lang }: any) => {
     if (active && payload && payload.length) {
+        // If it's a lab result point
+        if (payload[0].payload.isLabResult) {
+            const data = payload[0].payload;
+            return (
+                <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-xl border border-teal-100/50 shadow-sm">
+                    <p className="text-[10px] font-medium text-gray-400 mb-0.5 flex items-center gap-1">
+                        <FlaskConical size={10} />
+                        {formatDate(new Date(label), lang)} {formatTime(new Date(label))}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-base font-black text-teal-600 tracking-tight">
+                            {data.originalValue}
+                        </span>
+                        <span className="text-[10px] font-bold text-teal-400">{data.originalUnit}</span>
+                    </div>
+                    {data.originalUnit === 'pmol/l' && (
+                        <div className="text-[9px] text-gray-400 mt-0.5">
+                            ≈ {data.conc.toFixed(1)} pg/mL
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         return (
-            <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-xl border border-pink-100/50">
+            <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-xl border border-pink-100/50 shadow-sm">
                 <p className="text-[10px] font-medium text-gray-400 mb-0.5">
                     {formatDate(new Date(label), lang)} {formatTime(new Date(label))}
                 </p>
@@ -26,7 +50,7 @@ const CustomTooltip = ({ active, payload, label, t, lang }: any) => {
     return null;
 };
 
-const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | null, events: DoseEvent[], onPointClick: (e: DoseEvent) => void }) => {
+const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, onPointClick }: { sim: SimulationResult | null, events: DoseEvent[], labResults?: LabResult[], calibrationFactor?: number, onPointClick: (e: DoseEvent) => void }) => {
     const { t, lang } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [xDomain, setXDomain] = useState<[number, number] | null>(null);
@@ -36,9 +60,21 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
         if (!sim || sim.timeH.length === 0) return [];
         return sim.timeH.map((t, i) => ({
             time: t * 3600000, 
-            conc: sim.concPGmL[i]
+            conc: sim.concPGmL[i] * calibrationFactor
         }));
-    }, [sim]);
+    }, [sim, calibrationFactor]);
+
+    const labPoints = useMemo(() => {
+        if (!labResults || labResults.length === 0) return [];
+        return labResults.map(l => ({
+            time: l.timeH * 3600000,
+            conc: convertToPgMl(l.concValue, l.unit),
+            originalValue: l.concValue,
+            originalUnit: l.unit,
+            isLabResult: true,
+            id: l.id
+        }));
+    }, [labResults]);
 
     const eventPoints = useMemo(() => {
         if (!sim || events.length === 0) return [];
@@ -53,11 +89,11 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
             
             return {
                 time: timeMs,
-                conc: sim.concPGmL[closestIdx],
+                conc: sim.concPGmL[closestIdx] * calibrationFactor,
                 event: e
             };
         });
-    }, [sim, events]);
+    }, [sim, events, calibrationFactor]);
 
     const { minTime, maxTime, now } = useMemo(() => {
         const n = new Date().getTime();
@@ -73,8 +109,8 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
         if (!sim || data.length === 0) return null;
         const conc = interpolateConcentration(sim, now / 3600000);
         if (conc === null || Number.isNaN(conc)) return null;
-        return { time: now, conc };
-    }, [sim, data, now]);
+        return { time: now, conc: conc * calibrationFactor };
+    }, [sim, data, now, calibrationFactor]);
 
     // Slider helpers for quick panning (helps mobile users)
     // Initialize view: center on "now" with a reasonable window (e.g. 14 days)
@@ -156,6 +192,17 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
         setXDomain(clampDomain([start, end]));
     };
 
+    const getLevelStatus = (conc: number) => {
+        if (conc > 300) return { label: 'status.level.high', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: Info };
+        if (conc >= 100 && conc <= 200) return { label: 'status.level.mtf', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: Info };
+        if (conc >= 70 && conc <= 300) return { label: 'status.level.luteal', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: Info };
+        if (conc >= 30 && conc < 70) return { label: 'status.level.follicular', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', icon: Info };
+        if (conc >= 8 && conc < 30) return { label: 'status.level.male', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', icon: Info };
+        return { label: 'status.level.low', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: Info };
+    };
+
+    const status = nowPoint ? getLevelStatus(nowPoint.conc) : null;
+
     if (!sim || sim.timeH.length === 0) return (
         <div className="h-72 md:h-96 flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
             <Activity className="w-12 h-12 mb-4 text-gray-200" strokeWidth={1.5} />
@@ -199,6 +246,22 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
             <div
                 ref={containerRef}
                 className="h-64 md:h-80 lg:h-96 w-full touch-none relative select-none px-2 pb-2">
+                {status && (
+                    <div className={`absolute top-3 right-4 z-10 px-2.5 py-1 rounded-lg border ${status.bg} ${status.border} shadow-sm backdrop-blur-sm flex items-center gap-1.5 pointer-events-none opacity-90`}>
+                        <status.icon size={12} className={status.color} />
+                        <span className={`text-[10px] md:text-xs font-bold ${status.color}`}>
+                            {t(status.label)}
+                        </span>
+                    </div>
+                )}
+                {Math.abs((calibrationFactor ?? 1) - 1) > 0.001 && (
+                    <div className="absolute top-3 left-4 z-10 px-2.5 py-1 rounded-lg border bg-teal-50 border-teal-200 shadow-sm backdrop-blur-sm flex items-center gap-1.5 pointer-events-none opacity-90">
+                        <FlaskConical size={12} className="text-teal-600" />
+                        <span className="text-[10px] md:text-xs font-bold text-teal-700">
+                            ×{(calibrationFactor ?? 1).toFixed(2)}
+                        </span>
+                    </div>
+                )}
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: -12 }}>
                         <defs>
@@ -286,6 +349,20 @@ const ResultChart = ({ sim, events, onPointClick }: { sim: SimulationResult | nu
                                 );
                             }}
                         />
+                        {labPoints.length > 0 && (
+                            <Scatter 
+                                data={labPoints} 
+                                isAnimationActive={false}
+                                shape={({ cx, cy }: any) => (
+                                    <g>
+                                        <circle cx={cx} cy={cy} r={6} fill="#14b8a6" stroke="white" strokeWidth={2} />
+                                        <g transform={`translate(${(cx ?? 0) - 6}, ${(cy ?? 0) - 6})`}>
+                                            <FlaskConical size={12} color="white" />
+                                        </g>
+                                    </g>
+                                )}
+                            />
+                        )}
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>

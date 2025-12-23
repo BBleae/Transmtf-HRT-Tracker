@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Settings, Plus, Activity, Calendar, Languages, Upload, Download, Trash2, Info, Github, Copy } from 'lucide-react';
+import { Settings, Plus, Activity, Calendar, Languages, Upload, Download, Trash2, Info, Github, Copy, AlertTriangle, FlaskConical } from 'lucide-react';
 import { useTranslation, LanguageProvider } from './contexts/LanguageContext';
 import { useDialog, DialogProvider } from './contexts/DialogContext';
 import { APP_VERSION } from './constants';
-import { DoseEvent, Route, Ester, ExtraKey, SimulationResult, runSimulation, interpolateConcentration, encryptData, decryptData, getToE2Factor } from '../logic';
+import { DoseEvent, Route, Ester, ExtraKey, SimulationResult, runSimulation, interpolateConcentration, encryptData, decryptData, getToE2Factor, LabResult, calculateCalibrationFactor } from '../logic';
 import { formatDate, formatTime, getRouteIcon } from './utils/helpers';
 import { Lang } from './i18n/translations';
 import ResultChart from './components/ResultChart';
@@ -14,6 +14,8 @@ import ImportModal from './components/ImportModal';
 import ExportModal from './components/ExportModal';
 import PasswordDisplayModal from './components/PasswordDisplayModal';
 import PasswordInputModal from './components/PasswordInputModal';
+import DisclaimerModal from './components/DisclaimerModal';
+import LabResultModal from './components/LabResultModal';
 import CustomSelect from './components/CustomSelect';
 import flagCN from './flag_svg/🇨🇳.svg';
 import flagTW from './flag_svg/🇹🇼.svg';
@@ -35,6 +37,10 @@ const AppContent = () => {
         const saved = localStorage.getItem('hrt-weight');
         return saved ? parseFloat(saved) : 70.0;
     });
+    const [labResults, setLabResults] = useState<LabResult[]>(() => {
+        const saved = localStorage.getItem('hrt-lab-results');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     const [simulation, setSimulation] = useState<SimulationResult | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -47,9 +53,12 @@ const AppContent = () => {
     const [generatedPassword, setGeneratedPassword] = useState("");
     const [isPasswordDisplayOpen, setIsPasswordDisplayOpen] = useState(false);
     const [isPasswordInputOpen, setIsPasswordInputOpen] = useState(false);
+    const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+    const [isLabModalOpen, setIsLabModalOpen] = useState(false);
+    const [editingLab, setEditingLab] = useState<LabResult | null>(null);
 
-    type ViewKey = 'home' | 'history' | 'settings';
-    const viewOrder: ViewKey[] = ['home', 'history', 'settings'];
+    type ViewKey = 'home' | 'history' | 'lab' | 'settings';
+    const viewOrder: ViewKey[] = ['home', 'history', 'lab', 'settings'];
 
     const [currentView, setCurrentView] = useState<ViewKey>('home');
     const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
@@ -74,14 +83,15 @@ const AppContent = () => {
     };
 
     useEffect(() => {
-        const shouldLock = isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isImportModalOpen;
+        const shouldLock = isExportModalOpen || isPasswordDisplayOpen || isPasswordInputOpen || isWeightModalOpen || isFormOpen || isImportModalOpen || isDisclaimerOpen || isLabModalOpen;
         document.body.style.overflow = shouldLock ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isImportModalOpen]);
+    }, [isExportModalOpen, isPasswordDisplayOpen, isPasswordInputOpen, isWeightModalOpen, isFormOpen, isImportModalOpen, isDisclaimerOpen, isLabModalOpen]);
     const [pendingImportText, setPendingImportText] = useState<string | null>(null);
 
     useEffect(() => { localStorage.setItem('hrt-events', JSON.stringify(events)); }, [events]);
     useEffect(() => { localStorage.setItem('hrt-weight', weight.toString()); }, [weight]);
+    useEffect(() => { localStorage.setItem('hrt-lab-results', JSON.stringify(labResults)); }, [labResults]);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -103,11 +113,17 @@ const AppContent = () => {
         }
     }, [events, weight]);
 
+    const calibrationFactor = useMemo(() => {
+        if (!simulation) return 1;
+        return calculateCalibrationFactor(simulation, labResults);
+    }, [simulation, labResults]);
+
     const currentLevel = useMemo(() => {
         if (!simulation) return 0;
         const h = currentTime.getTime() / 3600000;
-        return interpolateConcentration(simulation, h) || 0;
-    }, [simulation, currentTime]);
+        const base = interpolateConcentration(simulation, h) || 0;
+        return base * calibrationFactor;
+    }, [simulation, currentTime, calibrationFactor]);
 
     const groupedEvents = useMemo(() => {
         const sorted = [...events].sort((a, b) => b.timeH - a.timeH);
@@ -125,6 +141,7 @@ const AppContent = () => {
     const navItems = useMemo<NavItem[]>(() => ([
         { id: 'home', label: t('nav.home'), icon: <Activity size={16} /> },
         { id: 'history', label: t('nav.history'), icon: <Calendar size={16} /> },
+        { id: 'lab', label: t('nav.lab'), icon: <FlaskConical size={16} /> },
         { id: 'settings', label: t('nav.settings'), icon: <Settings size={16} /> },
     ]), [t]);
 
@@ -152,10 +169,31 @@ const AppContent = () => {
             .filter((item): item is DoseEvent => item !== null);
     };
 
+    const sanitizeImportedLabResults = (raw: any): LabResult[] => {
+        if (!Array.isArray(raw)) return [];
+        return raw
+            .map((item: any) => {
+                if (!item || typeof item !== 'object') return null;
+                const { timeH, concValue, unit } = item;
+                const timeNum = Number(timeH);
+                const valNum = Number(concValue);
+                if (!Number.isFinite(timeNum) || !Number.isFinite(valNum)) return null;
+                const unitVal = unit === 'pg/ml' || unit === 'pmol/l' ? unit : 'pmol/l';
+                return {
+                    id: typeof item.id === 'string' ? item.id : uuidv4(),
+                    timeH: timeNum,
+                    concValue: valNum,
+                    unit: unitVal
+                } as LabResult;
+            })
+            .filter((item): item is LabResult => item !== null);
+    };
+
     const processImportedData = (parsed: any): boolean => {
         try {
             let newEvents: DoseEvent[] = [];
             let newWeight: number | undefined = undefined;
+            let newLabs: LabResult[] = [];
 
             if (Array.isArray(parsed)) {
                 newEvents = sanitizeImportedEvents(parsed);
@@ -166,12 +204,16 @@ const AppContent = () => {
                 if (typeof parsed.weight === 'number' && parsed.weight > 0) {
                     newWeight = parsed.weight;
                 }
+                if (Array.isArray(parsed.labResults)) {
+                    newLabs = sanitizeImportedLabResults(parsed.labResults);
+                }
             }
 
-            if (!newEvents.length && !newWeight) throw new Error('No valid entries');
+            if (!newEvents.length && !newWeight && !newLabs.length) throw new Error('No valid entries');
             
             if (newEvents.length > 0) setEvents(newEvents);
             if (newWeight !== undefined) setWeight(newWeight);
+            if (newLabs.length > 0) setLabResults(newLabs);
 
             showDialog('alert', t('drawer.import_success'));
             return true;
@@ -210,6 +252,29 @@ const AppContent = () => {
         setIsFormOpen(true);
     };
 
+    const handleAddLabResult = () => {
+        setEditingLab(null);
+        setIsLabModalOpen(true);
+    };
+
+    const handleEditLabResult = (res: LabResult) => {
+        setEditingLab(res);
+        setIsLabModalOpen(true);
+    };
+
+    const handleDeleteLabResult = (id: string) => {
+        showDialog('confirm', t('lab.delete_confirm'), () => {
+            setLabResults(prev => prev.filter(r => r.id !== id));
+        });
+    };
+
+    const handleClearLabResults = () => {
+        if (!labResults.length) return;
+        showDialog('confirm', t('lab.clear_confirm'), () => {
+            setLabResults([]);
+        });
+    };
+
     const handleSaveEvent = (e: DoseEvent) => {
         setEvents(prev => {
             const exists = prev.find(p => p.id === e.id);
@@ -234,7 +299,7 @@ const AppContent = () => {
     };
 
     const handleSaveDosages = () => {
-        if (events.length === 0) {
+        if (events.length === 0 && labResults.length === 0) {
             showDialog('alert', t('drawer.empty_export'));
             return;
         }
@@ -242,14 +307,15 @@ const AppContent = () => {
     };
 
     const handleQuickExport = () => {
-        if (events.length === 0) {
+        if (events.length === 0 && labResults.length === 0) {
             showDialog('alert', t('drawer.empty_export'));
             return;
         }
         const exportData = {
             meta: { version: 1, exportedAt: new Date().toISOString() },
             weight: weight,
-            events: events
+            events: events,
+            labResults: labResults
         };
         const json = JSON.stringify(exportData, null, 2);
         navigator.clipboard.writeText(json).then(() => {
@@ -274,7 +340,8 @@ const AppContent = () => {
         const exportData = {
             meta: { version: 1, exportedAt: new Date().toISOString() },
             weight: weight,
-            events: events
+            events: events,
+            labResults: labResults
         };
         const json = JSON.stringify(exportData, null, 2);
         
@@ -413,6 +480,8 @@ const AppContent = () => {
                                 sim={simulation} 
                                 events={events}
                                 onPointClick={handleEditEvent}
+                                labResults={labResults}
+                                calibrationFactor={calibrationFactor}
                             />
                         )}
 
@@ -493,6 +562,94 @@ const AppContent = () => {
                                     </div>
                                 ))}
                                 
+                            </div>
+                        )}
+
+                        {/* Lab Calibration */}
+                        {currentView === 'lab' && (
+                            <div className="relative space-y-5 pt-6 pb-8">
+                                <div className="px-4">
+                                    <div className="w-full p-4 rounded-2xl bg-white flex items-center justify-between shadow-sm">
+                                        <h2 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                                            <FlaskConical size={22} className="text-teal-500" /> {t('lab.title')}
+                                        </h2>
+                                        <div className="flex items-center gap-3">
+                                            {Math.abs(calibrationFactor - 1) > 0.001 && (
+                                                <span className="px-3 py-1 rounded-lg bg-teal-50 text-teal-700 text-xs font-bold border border-teal-100">
+                                                    ×{calibrationFactor.toFixed(2)}
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={handleAddLabResult}
+                                                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 h-11 rounded-xl bg-gray-900 text-white text-sm font-bold shadow-sm hover:shadow-md transition"
+                                            >
+                                                <Plus size={16} />
+                                                <span>{t('lab.add_title')}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {labResults.length === 0 ? (
+                                    <div className="mx-4 text-center py-12 text-gray-400 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
+                                        <p>{t('lab.empty')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+                                        {labResults
+                                            .slice()
+                                            .sort((a, b) => b.timeH - a.timeH)
+                                            .map(res => {
+                                                const d = new Date(res.timeH * 3600000);
+                                                return (
+                                                    <div key={res.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                                                        <div onClick={() => handleEditLabResult(res)} className="flex items-center gap-3 cursor-pointer">
+                                                            <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-sm font-bold text-teal-700">
+                                                                {res.unit === 'pmol/l' ? 'pmol' : 'pg'}
+                                                            </div>
+                                                            <div className="leading-tight">
+                                                                <p className="text-sm font-bold text-gray-900">
+                                                                    {res.concValue} {res.unit}
+                                                                </p>
+                                                                <p className="text-[11px] text-gray-500">
+                                                                    {formatDate(d, lang)} · {formatTime(d)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleEditLabResult(res)}
+                                                                className="px-3 py-1 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-100"
+                                                            >
+                                                                {t('btn.edit')}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteLabResult(res.id)}
+                                                                className="px-3 py-1 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50"
+                                                            >
+                                                                {t('btn.cancel')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                )}
+
+                                <div className="mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between px-4 py-3">
+                                    <div className="text-xs text-gray-500">
+                                        {t('lab.tip_scale')} ×{calibrationFactor.toFixed(2)}
+                                    </div>
+                                    <button
+                                        onClick={handleClearLabResults}
+                                        disabled={!labResults.length}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold transition ${
+                                            labResults.length ? 'text-red-500 hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        {t('lab.clear_all')}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -612,8 +769,20 @@ const AppContent = () => {
                                             <p className="text-xs text-gray-500">{t('drawer.github_desc')}</p>
                                         </div>
                                     </button>
+
+                                    <button
+                                        onClick={() => setIsDisclaimerOpen(true)}
+                                        className="w-full flex items-center gap-3 px-4 py-4 hover:bg-amber-50 transition text-left"
+                                    >
+                                        <AlertTriangle className="text-amber-500" size={20} />
+                                        <div className="text-left">
+                                            <p className="font-bold text-gray-900 text-sm">{t('drawer.disclaimer')}</p>
+                                            <p className="text-xs text-gray-500">{t('drawer.disclaimer_desc')}</p>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
+
 
                             {/* Version Footer */}
                             <div className="pt-2 pb-4 flex justify-center">
@@ -653,6 +822,17 @@ const AppContent = () => {
                             <span className="text-[11px] font-semibold">{t('nav.history')}</span>
                         </button>
                         <button
+                            onClick={() => handleViewChange('lab')}
+                            className={`flex-1 flex flex-col items-center gap-1 rounded-2xl py-2 transition-all border-2 ${
+                                currentView === 'lab'
+                                    ? 'bg-white text-[#0f766e] border-teal-200'
+                                    : 'text-gray-500 hover:text-gray-700 border-transparent'
+                            }`}
+                        >
+                            <FlaskConical size={22} className={currentView === 'lab' ? 'text-[#0f766e]' : ''} />
+                            <span className="text-[11px] font-semibold">{t('nav.lab')}</span>
+                        </button>
+                        <button
                             onClick={() => handleViewChange('settings')}
                             className={`flex-1 flex flex-col items-center gap-1 rounded-2xl py-2 transition-all border-2 ${
                                 currentView === 'settings'
@@ -672,6 +852,7 @@ const AppContent = () => {
                 onClose={() => setIsExportModalOpen(false)}
                 onExport={handleExportConfirm}
                 events={events}
+                labResults={labResults}
                 weight={weight}
             />
 
@@ -709,6 +890,27 @@ const AppContent = () => {
                     const ok = importEventsFromJson(payload);
                     return ok;
                 }}
+            />
+
+            <DisclaimerModal
+                isOpen={isDisclaimerOpen}
+                onClose={() => setIsDisclaimerOpen(false)}
+            />
+
+            <LabResultModal
+                isOpen={isLabModalOpen}
+                onClose={() => setIsLabModalOpen(false)}
+                onSave={(res) => {
+                    setLabResults(prev => {
+                        const exists = prev.find(r => r.id === res.id);
+                        if (exists) {
+                            return prev.map(r => r.id === res.id ? res : r);
+                        }
+                        return [...prev, res];
+                    });
+                }}
+                onDelete={(id) => setLabResults(prev => prev.filter(r => r.id !== id))}
+                resultToEdit={editingLab}
             />
         </div>
     );

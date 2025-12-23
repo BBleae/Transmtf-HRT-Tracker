@@ -55,6 +55,43 @@ export interface SimulationResult {
     auc: number;
 }
 
+// --- Lab Results & Calibration ---
+
+export interface LabResult {
+    id: string;
+    timeH: number;
+    concValue: number; // Value in the user's unit
+    unit: 'pg/ml' | 'pmol/l';
+}
+
+export function convertToPgMl(val: number, unit: 'pg/ml' | 'pmol/l'): number {
+    if (unit === 'pg/ml') return val;
+    return val / 3.671; // pmol/L to pg/mL conversion
+}
+
+export function calculateCalibrationFactor(sim: SimulationResult, results: LabResult[]): number {
+    if (results.length === 0 || !sim) return 1.0;
+
+    let numerator = 0;
+    let denominator = 0;
+
+    for (const res of results) {
+        const obs = convertToPgMl(res.concValue, res.unit);
+        const pred = interpolateConcentration(sim, res.timeH);
+
+        if (pred !== null && pred > 1.0) { // Ignore very low predicted values to avoid noise amplification
+            numerator += pred * obs;
+            denominator += pred * pred;
+        }
+    }
+
+    if (denominator === 0) return 1.0;
+    const k = numerator / denominator;
+    
+    // Clamp to reasonable bounds (e.g. 0.1x to 10x) to prevent extreme distortion
+    return Math.max(0.1, Math.min(10.0, k));
+}
+
 // --- Constants & Parameters (PKparameter.swift & PKcore.swift) ---
 
 const CorePK = {
