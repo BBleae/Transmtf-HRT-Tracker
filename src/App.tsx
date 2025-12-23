@@ -4,7 +4,7 @@ import { Settings, Plus, Activity, Calendar, Languages, Upload, Download, Trash2
 import { useTranslation, LanguageProvider } from './contexts/LanguageContext';
 import { useDialog, DialogProvider } from './contexts/DialogContext';
 import { APP_VERSION } from './constants';
-import { DoseEvent, Route, Ester, ExtraKey, SimulationResult, runSimulation, interpolateConcentration, encryptData, decryptData, getToE2Factor, LabResult, calculateCalibrationFactor } from '../logic';
+import { DoseEvent, Route, Ester, ExtraKey, SimulationResult, runSimulation, interpolateConcentration, encryptData, decryptData, getToE2Factor, LabResult, createCalibrationInterpolator } from '../logic';
 import { formatDate, formatTime, getRouteIcon } from './utils/helpers';
 import { Lang } from './i18n/translations';
 import ResultChart from './components/ResultChart';
@@ -113,17 +113,16 @@ const AppContent = () => {
         }
     }, [events, weight]);
 
-    const calibrationFactor = useMemo(() => {
-        if (!simulation) return 1;
-        return calculateCalibrationFactor(simulation, labResults);
+    const calibrationFn = useMemo(() => {
+        return createCalibrationInterpolator(simulation, labResults);
     }, [simulation, labResults]);
 
     const currentLevel = useMemo(() => {
         if (!simulation) return 0;
         const h = currentTime.getTime() / 3600000;
         const base = interpolateConcentration(simulation, h) || 0;
-        return base * calibrationFactor;
-    }, [simulation, currentTime, calibrationFactor]);
+        return base * calibrationFn(h);
+    }, [simulation, currentTime, calibrationFn]);
 
     const groupedEvents = useMemo(() => {
         const sorted = [...events].sort((a, b) => b.timeH - a.timeH);
@@ -481,7 +480,7 @@ const AppContent = () => {
                                 events={events}
                                 onPointClick={handleEditEvent}
                                 labResults={labResults}
-                                calibrationFactor={calibrationFactor}
+                                calibrationFn={calibrationFn}
                             />
                         )}
 
@@ -626,7 +625,7 @@ const AppContent = () => {
 
                                 <div className="mx-4 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between px-4 py-3">
                                     <div className="text-xs text-gray-500">
-                                        {t('lab.tip_scale')} ×{calibrationFactor.toFixed(2)}
+                                            {t('lab.tip_scale')} ×{calibrationFn(currentTime.getTime() / 3600000).toFixed(2)}
                                     </div>
                                     <button
                                         onClick={handleClearLabResults}
@@ -897,7 +896,11 @@ const AppContent = () => {
                         return [...prev, res];
                     });
                 }}
-                onDelete={(id) => setLabResults(prev => prev.filter(r => r.id !== id))}
+                onDelete={(id) => {
+                    showDialog('confirm', t('lab.delete_confirm'), () => {
+                        setLabResults(prev => prev.filter(r => r.id !== id));
+                    });
+                }}
                 resultToEdit={editingLab}
             />
         </div>

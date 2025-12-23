@@ -69,12 +69,16 @@ export function convertToPgMl(val: number, unit: 'pg/ml' | 'pmol/l'): number {
     return val / 3.671; // pmol/L to pg/mL conversion
 }
 
-export function calculateCalibrationFactor(sim: SimulationResult, results: LabResult[]): number {
-    if (results.length === 0 || !sim) return 1.0;
+/**
+ * Build a time-varying calibration scale based on lab results.
+ * Returns a ratio function r(t) such that conc(t) * r(t) is calibrated.
+ * Strategy: compute ratio=obs/pred at each lab time, then linearly interpolate ratios over time.
+ */
+export function createCalibrationInterpolator(sim: SimulationResult | null, results: LabResult[]) {
+    if (!sim || !results.length) return (_timeH: number) => 1;
 
     const getNearestConc = (timeH: number): number | null => {
         if (!sim.timeH.length) return null;
-        // binary search for nearest index
         let low = 0;
         let high = sim.timeH.length - 1;
         while (high - low > 1) {
@@ -87,27 +91,44 @@ export function calculateCalibrationFactor(sim: SimulationResult, results: LabRe
         return sim.concPGmL[idx];
     };
 
-    let numerator = 0;
-    let denominator = 0;
+    const points = results
+        .map(r => {
+            const obs = convertToPgMl(r.concValue, r.unit);
+            let pred = interpolateConcentration(sim, r.timeH);
+            if (pred === null || Number.isNaN(pred)) {
+                pred = getNearestConc(r.timeH);
+            }
+            if (pred === null || pred <= 0.01 || obs <= 0) return null;
+            const ratio = Math.max(0.1, Math.min(10, obs / pred));
+            return { timeH: r.timeH, ratio };
+        })
+        .filter((p): p is { timeH: number; ratio: number } => !!p)
+        .sort((a, b) => a.timeH - b.timeH);
 
-    for (const res of results) {
-        const obs = convertToPgMl(res.concValue, res.unit);
-        let pred = interpolateConcentration(sim, res.timeH);
-        if (pred === null || Number.isNaN(pred)) {
-            pred = getNearestConc(res.timeH);
-        }
-
-        if (pred !== null && pred > 0.01) { // ignore near-zero to avoid noise
-            numerator += pred * obs;
-            denominator += pred * pred;
-        }
+    if (!points.length) return (_timeH: number) => 1;
+    if (points.length === 1) {
+        const r0 = points[0].ratio;
+        return (_timeH: number) => r0;
     }
 
-    if (denominator === 0) return 1.0;
-    const k = numerator / denominator;
-    
-    // Clamp to reasonable bounds (e.g. 0.1x to 10x) to prevent extreme distortion
-    return Math.max(0.1, Math.min(10.0, k));
+    return (timeH: number) => {
+        if (timeH <= points[0].timeH) return points[0].ratio;
+        if (timeH >= points[points.length - 1].timeH) return points[points.length - 1].ratio;
+        // binary search
+        let low = 0;
+        let high = points.length - 1;
+        while (high - low > 1) {
+            const mid = Math.floor((low + high) / 2);
+            if (points[mid].timeH === timeH) return points[mid].ratio;
+            if (points[mid].timeH < timeH) low = mid;
+            else high = mid;
+        }
+        const p1 = points[low];
+        const p2 = points[high];
+        const t = (timeH - p1.timeH) / (p2.timeH - p1.timeH);
+        const r = p1.ratio + (p2.ratio - p1.ratio) * t;
+        return Math.max(0.1, Math.min(10, r));
+    };
 }
 
 // --- Constants & Parameters (PKparameter.swift & PKcore.swift) ---

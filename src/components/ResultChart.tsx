@@ -50,7 +50,7 @@ const CustomTooltip = ({ active, payload, label, t, lang }: any) => {
     return null;
 };
 
-const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, onPointClick }: { sim: SimulationResult | null, events: DoseEvent[], labResults?: LabResult[], calibrationFactor?: number, onPointClick: (e: DoseEvent) => void }) => {
+const ResultChart = ({ sim, events, labResults = [], calibrationFn = (_t: number) => 1, onPointClick }: { sim: SimulationResult | null, events: DoseEvent[], labResults?: LabResult[], calibrationFn?: (timeH: number) => number, onPointClick: (e: DoseEvent) => void }) => {
     const { t, lang } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [xDomain, setXDomain] = useState<[number, number] | null>(null);
@@ -58,11 +58,15 @@ const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, on
 
     const data = useMemo(() => {
         if (!sim || sim.timeH.length === 0) return [];
-        return sim.timeH.map((t, i) => ({
-            time: t * 3600000, 
-            conc: sim.concPGmL[i] * calibrationFactor
-        }));
-    }, [sim, calibrationFactor]);
+        return sim.timeH.map((t, i) => {
+            const timeMs = t * 3600000;
+            const scale = calibrationFn(t);
+            return {
+                time: timeMs, 
+                conc: sim.concPGmL[i] * scale
+            };
+        });
+    }, [sim, calibrationFn]);
 
     const labPoints = useMemo(() => {
         if (!labResults || labResults.length === 0) return [];
@@ -82,6 +86,7 @@ const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, on
         // Map events to data points, find closest concentration from sim
         return events.map(e => {
             const timeMs = e.timeH * 3600000;
+            const scale = calibrationFn(e.timeH);
             // Find closest time in sim
             const closestIdx = sim.timeH.reduce((prev, curr, i) => 
                 Math.abs(curr * 3600000 - timeMs) < Math.abs(sim.timeH[prev] * 3600000 - timeMs) ? i : prev
@@ -89,11 +94,11 @@ const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, on
             
             return {
                 time: timeMs,
-                conc: sim.concPGmL[closestIdx] * calibrationFactor,
+                conc: sim.concPGmL[closestIdx] * scale,
                 event: e
             };
         });
-    }, [sim, events, calibrationFactor]);
+    }, [sim, events, calibrationFn]);
 
     const { minTime, maxTime, now } = useMemo(() => {
         const n = new Date().getTime();
@@ -107,10 +112,11 @@ const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, on
 
     const nowPoint = useMemo(() => {
         if (!sim || data.length === 0) return null;
-        const conc = interpolateConcentration(sim, now / 3600000);
+        const h = now / 3600000;
+        const conc = interpolateConcentration(sim, h);
         if (conc === null || Number.isNaN(conc)) return null;
-        return { time: now, conc: conc * calibrationFactor };
-    }, [sim, data, now, calibrationFactor]);
+        return { time: now, conc: conc * calibrationFn(h) };
+    }, [sim, data, now, calibrationFn]);
 
     // Slider helpers for quick panning (helps mobile users)
     // Initialize view: center on "now" with a reasonable window (e.g. 14 days)
@@ -254,14 +260,17 @@ const ResultChart = ({ sim, events, labResults = [], calibrationFactor = 1.0, on
                         </span>
                     </div>
                 )}
-                {Math.abs((calibrationFactor ?? 1) - 1) > 0.001 && (
+                {(() => {
+                    const factorNow = calibrationFn(now / 3600000);
+                    return Math.abs(factorNow - 1) > 0.001 ? (
                     <div className="absolute top-3 left-4 z-10 px-2.5 py-1 rounded-lg border bg-teal-50 border-teal-200 shadow-sm backdrop-blur-sm flex items-center gap-1.5 pointer-events-none opacity-90">
                         <FlaskConical size={12} className="text-teal-600" />
                         <span className="text-[10px] md:text-xs font-bold text-teal-700">
-                            ×{(calibrationFactor ?? 1).toFixed(2)}
+                            ×{(factorNow ?? 1).toFixed(2)}
                         </span>
                     </div>
-                )}
+                    ) : null;
+                })()}
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: -12 }}>
                         <defs>
