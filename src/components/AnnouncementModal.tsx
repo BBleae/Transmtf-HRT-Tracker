@@ -23,7 +23,7 @@ const ANNOUNCEMENT_SANITIZE_CONFIG = {
   ALLOW_DATA_ATTR: false,
   FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math'],
   FORBID_ATTR: ['style'],
-  ALLOWED_URI_REGEXP: /^(?:(?:https?):|mailto:|tel:|\/)/i,
+  ALLOWED_URI_REGEXP: /^(?:https:|mailto:|tel:|\/(?!\/))/i,
 };
 
 function enforceSafeLinkTargets(html: string): string {
