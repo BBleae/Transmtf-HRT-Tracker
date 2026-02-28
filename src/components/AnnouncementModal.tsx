@@ -32,9 +32,10 @@ function enforceSafeLinkTargets(html: string): string {
 
   template.content.querySelectorAll('a[target]').forEach((anchor) => {
     const target = anchor.getAttribute('target');
-    if (!target) return;
+    if (target == null) return;
 
-    if (target.toLowerCase() !== '_blank') {
+    const normalizedTarget = target.trim().toLowerCase();
+    if (normalizedTarget !== '_blank') {
       anchor.removeAttribute('target');
       return;
     }
