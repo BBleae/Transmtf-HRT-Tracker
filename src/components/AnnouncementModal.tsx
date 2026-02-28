@@ -81,12 +81,22 @@ const AnnouncementModal: React.FC = () => {
         const sanitized = sanitizeAnnouncementHtml(text).trim();
         if (!sanitized) return;
 
-        const hash = await hashContent(sanitized);
-        if (hash !== localStorage.getItem(STORAGE_KEY)) {
-          localStorage.setItem(STORAGE_KEY, hash);
-          setContent(sanitized);
-          setVisible(true);
+        const currentHash = await hashContent(sanitized);
+        const storedHash = localStorage.getItem(STORAGE_KEY);
+
+        // Backward compatibility: older versions stored hash of raw content.
+        if (storedHash === currentHash) return;
+        if (storedHash) {
+          const legacyHash = await hashContent(text);
+          if (storedHash === legacyHash) {
+            localStorage.setItem(STORAGE_KEY, currentHash);
+            return;
+          }
         }
+
+        localStorage.setItem(STORAGE_KEY, currentHash);
+        setContent(sanitized);
+        setVisible(true);
       } catch {
         // 公告是非关键功能，静默失败
       }
