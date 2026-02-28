@@ -1,8 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { X, Megaphone } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const ANNOUNCEMENT_URL = 'https://www.transmtf.com/api/announcement/tmtf_b243d43f97b51b4fef747016';
 const STORAGE_KEY = 'tmtf_announcement_hash';
+const ANNOUNCEMENT_ALLOWED_TAGS = [
+  'p', 'br', 'strong', 'em', 'b', 'i', 'u',
+  'ul', 'ol', 'li',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  'span', 'div',
+  'a', 'blockquote', 'code', 'pre', 'hr', 'img'
+];
+const ANNOUNCEMENT_ALLOWED_ATTR = [
+  'href', 'title', 'target', 'rel', 'src', 'alt',
+  'colspan', 'rowspan', 'scope'
+];
+
+function sanitizeAnnouncementHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ANNOUNCEMENT_ALLOWED_TAGS,
+    ALLOWED_ATTR: ANNOUNCEMENT_ALLOWED_ATTR,
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math'],
+    FORBID_ATTR: ['style'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?):|mailto:|tel:|\/)/i,
+  });
+}
 
 async function hashContent(content: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
@@ -23,10 +47,13 @@ const AnnouncementModal: React.FC = () => {
         const text = (await res.text()).trim();
         if (!text) return;
 
-        const hash = await hashContent(text);
+        const sanitized = sanitizeAnnouncementHtml(text).trim();
+        if (!sanitized) return;
+
+        const hash = await hashContent(sanitized);
         if (hash !== localStorage.getItem(STORAGE_KEY)) {
           localStorage.setItem(STORAGE_KEY, hash);
-          setContent(text);
+          setContent(sanitized);
           setVisible(true);
         }
       } catch {
