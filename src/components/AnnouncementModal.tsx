@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { X, Megaphone } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const ANNOUNCEMENT_URL = 'https://www.transmtf.com/api/announcement/tmtf_b243d43f97b51b4fef747016';
 const STORAGE_KEY = 'tmtf_announcement_hash';
@@ -11,9 +12,49 @@ async function hashContent(content: string): Promise<string> {
     .join('');
 }
 
+/**
+ * AnnouncementModal Component
+ * 
+ * SECURITY FIX: Remote HTML content is sanitized using DOMPurify before rendering
+ * to prevent XSS attacks. If the announcement API is compromised, malicious scripts
+ * cannot execute in the user's browser context.
+ * 
+ * Previously vulnerable to:
+ * - Cookie theft (access_token, refresh_token, security-pwd)
+ * - Session hijacking
+ * - Data exfiltration
+ */
 const AnnouncementModal: React.FC = () => {
-  const [content, setContent] = useState('');
+  const [rawContent, setRawContent] = useState('');
   const [visible, setVisible] = useState(false);
+
+  // SECURITY: Sanitize content before rendering to prevent XSS attacks
+  // Remote HTML from external API could be compromised by attackers
+  const content = useMemo(() => {
+    if (!rawContent) return '';
+    return DOMPurify.sanitize(rawContent, {
+      // Allow only safe HTML tags for rich content display
+      ALLOWED_TAGS: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'p', 'br', 'hr',
+        'ul', 'ol', 'li',
+        'strong', 'b', 'em', 'i', 'u', 's',
+        'a', 'img',
+        'blockquote', 'code', 'pre',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td',
+        'span', 'div'
+      ],
+      // Allow only safe attributes
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'class', 'id',
+        'target', 'rel',
+        'width', 'height'
+      ],
+      // Add security attributes to links
+      ADD_ATTR: ['target', 'rel'],
+      FORCE_BODY: true,
+    });
+  }, [rawContent]);
 
   useEffect(() => {
     const check = async () => {
@@ -26,7 +67,7 @@ const AnnouncementModal: React.FC = () => {
         const hash = await hashContent(text);
         if (hash !== localStorage.getItem(STORAGE_KEY)) {
           localStorage.setItem(STORAGE_KEY, hash);
-          setContent(text);
+          setRawContent(text);
           setVisible(true);
         }
       } catch {
@@ -63,7 +104,7 @@ const AnnouncementModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Content */}
+        {/* Content - SECURITY: Sanitized with DOMPurify */}
         <div
           className="px-6 py-5 max-h-[60vh] overflow-y-auto text-sm text-gray-700 leading-relaxed announcement-content"
           dangerouslySetInnerHTML={{ __html: content }}
