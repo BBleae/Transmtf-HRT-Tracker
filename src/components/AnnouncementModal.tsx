@@ -7,10 +7,15 @@ const STORAGE_KEY = 'tmtf_announcement_hash';
 const ANNOUNCEMENT_ALLOWED_TAGS = [
   'p', 'br', 'strong', 'em', 'b', 'i', 'u',
   'ul', 'ol', 'li',
-  'h1', 'h2', 'h3',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  'span', 'div',
   'a', 'blockquote', 'code', 'pre', 'hr', 'img'
 ];
-const ANNOUNCEMENT_ALLOWED_ATTR = ['href', 'title', 'target', 'rel', 'src', 'alt'];
+const ANNOUNCEMENT_ALLOWED_ATTR = [
+  'href', 'title', 'target', 'rel', 'src', 'alt',
+  'colspan', 'rowspan', 'scope'
+];
 
 function sanitizeAnnouncementHtml(html: string): string {
   return DOMPurify.sanitize(html, {
