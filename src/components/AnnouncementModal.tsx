@@ -16,16 +16,46 @@ const ANNOUNCEMENT_ALLOWED_ATTR = [
   'href', 'title', 'target', 'rel', 'src', 'alt',
   'colspan', 'rowspan', 'scope'
 ];
+const ANNOUNCEMENT_SAFE_REL_TOKENS = ['noopener', 'noreferrer'] as const;
+const ANNOUNCEMENT_SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ANNOUNCEMENT_ALLOWED_TAGS,
+  ALLOWED_ATTR: ANNOUNCEMENT_ALLOWED_ATTR,
+  ALLOW_DATA_ATTR: false,
+  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math'],
+  FORBID_ATTR: ['style'],
+  ALLOWED_URI_REGEXP: /^(?:(?:https?):|mailto:|tel:|\/)/i,
+};
+
+function enforceSafeLinkTargets(html: string): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('a[target]').forEach((anchor) => {
+    const target = anchor.getAttribute('target');
+    if (!target) return;
+
+    if (target.toLowerCase() !== '_blank') {
+      anchor.removeAttribute('target');
+      return;
+    }
+
+    anchor.setAttribute('target', '_blank');
+    const relTokens = new Set(
+      (anchor.getAttribute('rel') ?? '')
+        .split(/\s+/)
+        .map(token => token.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    ANNOUNCEMENT_SAFE_REL_TOKENS.forEach(token => relTokens.add(token));
+    anchor.setAttribute('rel', Array.from(relTokens).join(' '));
+  });
+
+  return template.innerHTML;
+}
 
 function sanitizeAnnouncementHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ANNOUNCEMENT_ALLOWED_TAGS,
-    ALLOWED_ATTR: ANNOUNCEMENT_ALLOWED_ATTR,
-    ALLOW_DATA_ATTR: false,
-    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math'],
-    FORBID_ATTR: ['style'],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?):|mailto:|tel:|\/)/i,
-  });
+  const sanitized = DOMPurify.sanitize(html, ANNOUNCEMENT_SANITIZE_CONFIG);
+  return enforceSafeLinkTargets(sanitized);
 }
 
 async function hashContent(content: string): Promise<string> {
