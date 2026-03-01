@@ -79,7 +79,7 @@ export function sanitizeCssValue(cssText: string): string {
       const value = decl.substring(colonIdx + 1).trim().toLowerCase();
       if (!ANNOUNCEMENT_ALLOWED_CSS_PROPERTIES.has(prop)) return false;
       if (/(?:url|expression)\s*\(/.test(value)) return false;
-      if (/javascript\s*:/.test(value)) return false;
+      if (/javascript\s*[:(]/.test(value)) return false;
       return true;
     })
     .join('; ');

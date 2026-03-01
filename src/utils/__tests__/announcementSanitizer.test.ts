@@ -118,6 +118,12 @@ describe('sanitizeCssValue', () => {
     expect(sanitizeCssValue('cursor: url(data:image/png;base64,abc), auto')).toBe('');
   });
 
+  it('allows background-color with safe color values', () => {
+    expect(sanitizeCssValue('background-color: #fff')).toBe('background-color: #fff');
+    expect(sanitizeCssValue('background-color: rgb(255, 0, 0)')).toBe('background-color: rgb(255, 0, 0)');
+    expect(sanitizeCssValue('background-color: red')).toBe('background-color: red');
+  });
+
   it('blocks expression() in CSS values', () => {
     expect(sanitizeCssValue('width: expression(alert(1))')).toBe('');
     expect(sanitizeCssValue('color: expression(document.cookie)')).toBe('');
@@ -125,6 +131,10 @@ describe('sanitizeCssValue', () => {
 
   it('blocks javascript: in CSS values', () => {
     expect(sanitizeCssValue('background-color: javascript:alert(1)')).toBe('');
+  });
+
+  it('blocks javascript() in CSS values', () => {
+    expect(sanitizeCssValue('color: javascript(alert(1))')).toBe('');
   });
 
   it('blocks url() with whitespace variations', () => {
